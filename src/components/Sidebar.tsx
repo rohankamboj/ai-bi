@@ -13,6 +13,7 @@ import {
   FaDatabase,
 } from 'react-icons/fa';
 import { NavLink } from 'react-router-dom';
+import handleCreateDashboard from '../api/create-dashboard';
 
 interface SidebarProps {
   dashboards: DashboardConfig[];
@@ -45,8 +46,14 @@ const Sidebar: React.FC<SidebarProps> = ({
   const [isAddDashboardModalOpen, setIsAddDashboardModalOpen] = useState(false);
   const [newDashboardName, setNewDashboardName] = useState('');
 
-  const handleAddDashboard = () => {
+  const handleAddDashboard = async () => {
     if (newDashboardName.trim() === '') return;
+
+    await handleCreateDashboard({
+      dashboard_name: newDashboardName.trim(),
+      user_id: '670ea14e8e430efcdf38d5b4',
+    });
+
     addDashboard(newDashboardName.trim());
     setNewDashboardName('');
     setIsAddDashboardModalOpen(false);
