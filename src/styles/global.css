@@ -1,0 +1,31 @@
+/* Hide scrollbar when overflow-hidden class is applied */
+body.overflow-hidden {
+    overflow: hidden;
+  }
+  
+  body.overflow-hidden::-webkit-scrollbar {
+    display: none;
+  }
+  
+  body.overflow-hidden {
+    -ms-overflow-style: none; /* IE and Edge */
+    scrollbar-width: none; /* Firefox */
+  }
+
+.custom-scrollbar::-webkit-scrollbar {
+  width: 8px;  /* Reduced from 10px to 8px */
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: #e0e0e0;  /* Slightly darker than #f1f1f1 */
+  border-radius: 8px;  /* Adjusted to match new width */
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: #888;  /* Darker color for the thumb */
+  border-radius: 8px;  /* Adjusted to match new width */
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: #555;  /* Even darker on hover */
+}

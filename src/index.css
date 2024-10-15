@@ -1,0 +1,84 @@
+@import './styles/global.css';
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+/* Custom Scrollbar Styles */
+.custom-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: #4FD1C5 #1A2A2F;
+}
+
+.custom-scrollbar::-webkit-scrollbar {
+  width: 8px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: #1A2A2F;
+  border-radius: 10px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background-color: #4FD1C5;
+  border-radius: 10px;
+  border: 2px solid #1A2A2F;
+}
+.custom-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: #4FD1C5 #1A2A2F;
+}
+
+.custom-scrollbar::-webkit-scrollbar {
+  width: 8px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: #1A2A2F;
+  border-radius: 10px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background-color: #4FD1C5;
+  border-radius: 10px;
+  border: 2px solid #1A2A2F;
+}
+* {
+  scrollbar-width: thin;
+  scrollbar-color: #4FD1C5 #1A2A2F;
+}
+
+*::-webkit-scrollbar {
+  width: 8px;
+}
+
+*::-webkit-scrollbar-track {
+  background: #1A2A2F;
+}
+
+*::-webkit-scrollbar-thumb {
+  background-color: #4FD1C5;
+  border-radius: 10px;
+  border: 2px solid #1A2A2F;
+}
+
+/* Ensure the custom scrollbar is visible on all elements */
+html, body, div, pre, code {
+  scrollbar-width: thin;
+  scrollbar-color: #4FD1C5 #1A2A2F;
+}
+
+.custom-scrollbar::-webkit-scrollbar {
+  width: 8px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: #1A2A2F;
+} 
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: #4FD1C5;
+  border-radius: 10px;
+}
+
+  
+
