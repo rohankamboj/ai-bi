@@ -85,7 +85,7 @@ export const loginUser = createAsyncThunk<
   { rejectValue: string }
 >('user/loginUser', async ({ username, password }, { rejectWithValue }) => {
   try {
-    const url = `${RAPID_AUTH_URL}/token`;
+    const url = 'https://aibi-backend-1060627628276.us-central1.run.app/token';
     const data = { username, password };
 
     const options = {
@@ -96,8 +96,11 @@ export const loginUser = createAsyncThunk<
     };
 
     const response = await axios(options);
-    const { access_token } = response.data;
+    const { access_token, user_id } = response.data;
+
     Cookies.set('token', access_token, { secure: true, expires: 1 });
+    localStorage.setItem('userId', user_id);
+
     return access_token;
   } catch (error: any) {
     if (axios.isAxiosError(error)) {
@@ -151,8 +154,9 @@ const userSlice = createSlice({
       state.user = null;
       state.sessionId = null;
       Cookies.remove('token');
-      localStorage.removeItem('token');
-      localStorage.removeItem('sessionId');
+      // localStorage.removeItem('token');
+      // localStorage.removeItem('sessionId');
+      localStorage.clear();
     },
   },
   extraReducers: (builder) => {

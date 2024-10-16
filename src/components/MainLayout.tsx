@@ -30,8 +30,8 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
     dispatch(setActiveDashboardId(id));
   };
 
-  const handleAddDashboard = (name: string) => {
-    dispatch(addDashboard(name));
+  const handleAddDashboard = (data: { name: string; id: string }) => {
+    dispatch(addDashboard({ ...data }));
   };
 
   const handleDeleteDashboard = (id: string) => {

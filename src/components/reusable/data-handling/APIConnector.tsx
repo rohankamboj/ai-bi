@@ -32,7 +32,7 @@ const APIConnector: React.FC<APIConnectorProps> = ({ onSuccess }) => {
 
       await handleCreateNewAPIConnection({
         url: apiUrl,
-        user_id: '670ea14e8e430efcdf38d5b4',
+        user_id: localStorage.getItem('userId') ?? '',
         headers: {},
         parameters: {},
       });

@@ -26,8 +26,8 @@ const DashboardManager: React.FC = () => {
     }
   }, [dashboards, activeDashboardId, dispatch]);
 
-  const handleAddDashboard = (name: string) => {
-    dispatch(addDashboard(name));
+  const handleAddDashboard = ({ name, id }: { name: string; id: string }) => {
+    dispatch(addDashboard({ name, id }));
   };
 
   const handleDeleteDashboard = (id: string) => {

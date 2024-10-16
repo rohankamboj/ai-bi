@@ -19,7 +19,7 @@ interface SidebarProps {
   dashboards: DashboardConfig[];
   activeDashboardId: string;
   setActiveDashboardId: (id: string) => void;
-  addDashboard: (name: string) => void;
+  addDashboard: (data: { name: string; id: string }) => void;
   deleteDashboard: (id: string) => void;
   isCollapsed: boolean; // Receive collapse state
   setIsCollapsed: (collapsed: boolean) => void; // Receive state updater
@@ -47,16 +47,19 @@ const Sidebar: React.FC<SidebarProps> = ({
   const [newDashboardName, setNewDashboardName] = useState('');
 
   const handleAddDashboard = async () => {
-    if (newDashboardName.trim() === '') return;
+    const dashboard_name = newDashboardName.trim();
+    if (dashboard_name === '') return;
 
-    await handleCreateDashboard({
-      dashboard_name: newDashboardName.trim(),
-      user_id: '670ea14e8e430efcdf38d5b4',
+    const data = await handleCreateDashboard({
+      dashboard_name,
+      user_id: localStorage.getItem('userId') ?? '',
     });
 
-    addDashboard(newDashboardName.trim());
-    setNewDashboardName('');
-    setIsAddDashboardModalOpen(false);
+    if (data) {
+      addDashboard({ name: dashboard_name, id: data.dashboard_id });
+      setNewDashboardName('');
+      setIsAddDashboardModalOpen(false);
+    }
   };
 
   return (

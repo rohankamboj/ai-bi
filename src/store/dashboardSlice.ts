@@ -49,10 +49,13 @@ const dashboardSlice = createSlice({
     setDashboards: (state, action: PayloadAction<DashboardConfig[]>) => {
       state.dashboards = action.payload;
     },
-    addDashboard: (state, action: PayloadAction<string>) => {
+    addDashboard: (
+      state,
+      action: PayloadAction<{ name: string; id: string }>
+    ) => {
       const newDashboard: DashboardConfig = {
-        id: uuidv4(),
-        name: action.payload,
+        id: action.payload.id,
+        name: action.payload.name,
         agent: null,
         chartConfigs: {},
         layouts: {},
@@ -62,16 +65,25 @@ const dashboardSlice = createSlice({
       state.dashboards.push(newDashboard);
     },
     updateDashboard: (state, action: PayloadAction<DashboardConfig>) => {
-      const index = state.dashboards.findIndex(d => d.id === action.payload.id);
+      const index = state.dashboards.findIndex(
+        (d) => d.id === action.payload.id
+      );
       if (index !== -1) {
         state.dashboards[index] = action.payload;
       }
     },
     deleteDashboard: (state, action: PayloadAction<string>) => {
-      state.dashboards = state.dashboards.filter(d => d.id !== action.payload);
+      state.dashboards = state.dashboards.filter(
+        (d) => d.id !== action.payload
+      );
     },
-    assignAgentToDashboard: (state, action: PayloadAction<{ dashboardId: string; agent: Agent }>) => {
-      const dashboard = state.dashboards.find(d => d.id === action.payload.dashboardId);
+    assignAgentToDashboard: (
+      state,
+      action: PayloadAction<{ dashboardId: string; agent: Agent }>
+    ) => {
+      const dashboard = state.dashboards.find(
+        (d) => d.id === action.payload.dashboardId
+      );
       if (dashboard) {
         dashboard.agent = action.payload.agent;
       }
