@@ -1,8 +1,11 @@
 // src/components/data-handling/connectors/DatabaseConnector.tsx
 
-import React, { useState } from "react";
-import { useDispatch } from "react-redux";
-import { addDatasource } from "../../../store/dataSourceSlice";
+import React, { useEffect, useState } from 'react';
+import { useDispatch } from 'react-redux';
+import { addDatasource } from '../../../store/dataSourceSlice';
+import handleGetDatasets from '../../../api/get-bigquery-dataset';
+import handleGetDatasetsTables from '../../../api/get-dataset-table';
+import handleConnectDatabase from '../../../api/connect-db';
 
 interface DatabaseConnectorProps {
   onSuccess: () => void;
@@ -11,98 +14,135 @@ interface DatabaseConnectorProps {
 const DatabaseConnector: React.FC<DatabaseConnectorProps> = ({ onSuccess }) => {
   const dispatch = useDispatch();
   const [connectionDetails, setConnectionDetails] = useState({
-    host: "",
-    port: "",
-    database: "",
-    user: "",
-    password: "",
+    host: '',
+    port: '',
+    database: '',
+    user: '',
+    password: '',
   });
-  const [error, setError] = useState<string>("");
+  const [error, setError] = useState<string>('');
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setConnectionDetails({
-      ...connectionDetails,
-      [e.target.name]: e.target.value,
-    });
+  const [datasets, setDatasets] = useState<string[]>([]);
+  const [selectedDataset, setSelectedDataset] = useState<string>('');
+  const [selectedDataTable, setSelectedDataTable] = useState<string>('');
+
+  const [datasetTable, setDatasetTable] = useState<
+    { id: string; table_name: string }[]
+  >([]);
+
+  const getDatasets = async () => {
+    const data = await handleGetDatasets();
+
+    setDatasets(['select dataset', ...data.datasets]);
   };
 
-  const handleConnectDatabase = () => {
+  useEffect(() => {
+    // get all datasets
+    getDatasets();
+  }, []);
+
+  const getDatasetTables = async (dataset: string) => {
+    const data = await handleGetDatasetsTables({ dataset });
+
+    setDatasetTable(data.tables);
+  };
+
+  useEffect(() => {
+    if (selectedDataset) {
+      getDatasetTables(selectedDataset);
+    }
+  }, [selectedDataset]);
+
+  useEffect(() => {
+    if (selectedDataTable) {
+      console.log(selectedDataTable);
+    }
+  }, [selectedDataTable]);
+
+  const handleSelectChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    setSelectedDataset(e.target.value);
+  };
+
+  const handleSelectDataTableChange = (
+    e: React.ChangeEvent<HTMLSelectElement>
+  ) => {
+    setSelectedDataTable(e.target.value);
+  };
+
+  const connectDatabase = async () => {
     // Simulate fetching data from a database
     try {
       // Here you would normally connect to the database using connectionDetails
       // For demonstration, we'll simulate data
-      const fetchedData = [
-        { id: 1, name: "Alice", role: "Engineer" },
-        { id: 2, name: "Bob", role: "Designer" },
-        // more data...
-      ];
+      // const fetchedData = [
+      //   { id: 1, name: 'Alice', role: 'Engineer' },
+      //   { id: 2, name: 'Bob', role: 'Designer' },
+      //   // more data...
+      // ];
+
+      const data = await handleConnectDatabase({ tableId: selectedDataTable });
 
       dispatch(
         addDatasource({
-          id: `ds-${Date.now()}`,
-          name: `Database Data - ${connectionDetails.database}`,
-          data: fetchedData,
+          id: 'db_connection_id',
+          name: `Database Data - ${data.datasource._id}`,
+          data: data.data,
         })
       );
 
       // Notify parent component of success
       onSuccess();
     } catch (err) {
-      console.error("Error connecting to database:", err);
-      setError("Failed to connect to the database. Please check the details and try again.");
+      console.error('Error connecting to database:', err);
+      setError(
+        'Failed to connect to the database. Please check the details and try again.'
+      );
     }
   };
 
   return (
-    <div className="mt-2 space-y-4">
-      <label className="block font-semibold mb-2 text-gray-200">Database Connection Details:</label>
-      <input
-        type="text"
-        name="host"
-        value={connectionDetails.host}
-        onChange={handleInputChange}
-        className="border border-gray-600 bg-gray-700 text-white p-2 w-full rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
-        placeholder="Host"
-      />
-      <input
-        type="text"
-        name="port"
-        value={connectionDetails.port}
-        onChange={handleInputChange}
-        className="border border-gray-600 bg-gray-700 text-white p-2 w-full rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
-        placeholder="Port"
-      />
-      <input
-        type="text"
-        name="database"
-        value={connectionDetails.database}
-        onChange={handleInputChange}
-        className="border border-gray-600 bg-gray-700 text-white p-2 w-full rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
-        placeholder="Database Name"
-      />
-      <input
-        type="text"
-        name="user"
-        value={connectionDetails.user}
-        onChange={handleInputChange}
-        className="border border-gray-600 bg-gray-700 text-white p-2 w-full rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
-        placeholder="User"
-      />
-      <input
-        type="password"
-        name="password"
-        value={connectionDetails.password}
-        onChange={handleInputChange}
-        className="border border-gray-600 bg-gray-700 text-white p-2 w-full rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
-        placeholder="Password"
-      />
+    <div className='mt-2 space-y-4'>
+      <label className='block font-semibold mb-2 text-gray-200'>
+        Database Connection Details:
+      </label>
+
+      <select onChange={handleSelectChange} className='w-full text-black'>
+        {datasets.map((dataset) => (
+          <option
+            key={dataset}
+            value={dataset}
+            defaultValue={'select dataset'}
+            className='text-black border border-gray-600 bg-gray-700  p-2 w-full rounded focus:outline-none '
+          >
+            {dataset}
+          </option>
+        ))}
+      </select>
+
+      {datasetTable.length > 0 && (
+        <select
+          onChange={handleSelectDataTableChange}
+          className='w-full text-black'
+        >
+          {datasetTable.map((table) => (
+            <option
+              key={table.id}
+              value={table.id}
+              className='text-black border border-gray-600 bg-gray-700  p-2 w-full rounded focus:outline-none '
+            >
+              {table.table_name}
+            </option>
+          ))}
+        </select>
+      )}
+
       <button
-        className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded transition-colors duration-200"
-        onClick={handleConnectDatabase}
+        className='bg-blue-600 w-full hover:bg-blue-700 text-white px-4 py-2 rounded transition-colors duration-200'
+        onClick={connectDatabase}
       >
         Connect to Database
       </button>
-      {error && <p className="text-red-400 mt-2">{error}</p>}
+      {error && <p className='text-red-400 mt-2'>{error}</p>}
     </div>
   );
 };

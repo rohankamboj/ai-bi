@@ -16,6 +16,7 @@ import AdvancedLineChart from './charts/LineChart';
 import AdvancedPieChart from './charts/PieChart';
 import AdvancedRadarChart from './charts/RadarChart';
 import AdvancedInteractiveMap from './maps/AdvancedInteractiveMap';
+import axios from 'axios';
 
 interface DynamicComponent {
   id: string;
@@ -102,7 +103,7 @@ const Dashboard: React.FC = () => {
     setSelectedDatasource(datasourceId);
   };
 
-  const handleAddModuleConfirm = () => {
+  const handleAddModuleConfirm = async () => {
     if (
       !selectedDatasource ||
       selectedValues.length === 0 ||
@@ -221,6 +222,40 @@ const Dashboard: React.FC = () => {
       maxH: Infinity,
       static: false,
     };
+
+    const chartDataa = {
+      dashboard_id: dashboardConfig.id,
+      chart_name: 'anything',
+      datasource_id: selectedSource.id,
+      chart_type: 'Bar',
+      column_span: 2,
+      row_span: 1,
+      position: 1,
+      chart_details: {
+        x_axis: 'id',
+        y_axis: 'title',
+        x_axis_label: 'Id',
+        y_axis_label: 'Title',
+      },
+    };
+
+    const response = await axios.post(
+      'https://aibi-backend-1060627628276.us-central1.run.app/charts/',
+      {
+        ...chartDataa,
+      },
+      {
+        headers: {
+          accept: 'application/json',
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+
+    const data = response.data;
+
+    console.log('Bot response data:', data);
 
     dispatch(
       updateDashboard({
