@@ -9,6 +9,7 @@ import { RootState } from '../store';
 import ChatbotIcon from './common/ChatbotIcon';
 import Popup from './common/Popup';
 
+import axios from 'axios';
 import { DashboardConfig, updateDashboard } from '../store/dashboardSlice';
 import AdvancedBarChart from './charts/BarChart';
 import HeatMapChart from './charts/HeatMapChart';
@@ -16,7 +17,7 @@ import AdvancedLineChart from './charts/LineChart';
 import AdvancedPieChart from './charts/PieChart';
 import AdvancedRadarChart from './charts/RadarChart';
 import AdvancedInteractiveMap from './maps/AdvancedInteractiveMap';
-import axios from 'axios';
+import { toast } from 'react-toastify';
 
 interface DynamicComponent {
   id: string;
@@ -44,6 +45,12 @@ const Dashboard: React.FC = () => {
     (state: RootState) => state.dataSource.dataSources
   );
 
+  const [uniqueChartName, setUniqueChartName] = useState<string>('');
+  const [axisLabel, setAxisLabel] = useState({
+    x: '',
+    y: '',
+  });
+
   const [isAddModuleModalOpen, setIsAddModuleModalOpen] = useState(false);
   const [selectedDatasource, setSelectedDatasource] = useState<string | null>(
     null
@@ -53,6 +60,7 @@ const Dashboard: React.FC = () => {
     null
   );
   const [availableValues, setAvailableValues] = useState<string[]>([]);
+  const [selectedMetadata, setSelectedMetadata] = useState<string[]>([]);
   const [editingChart, setEditingChart] = useState<string | null>(null);
   const [isAssignAgentModalOpen, setIsAssignAgentModalOpen] = useState(false);
   const [selectedLatitudeField, setSelectedLatitudeField] =
@@ -104,11 +112,7 @@ const Dashboard: React.FC = () => {
   };
 
   const handleAddModuleConfirm = async () => {
-    if (
-      !selectedDatasource ||
-      selectedValues.length === 0 ||
-      !selectedChartType
-    ) {
+    if (!selectedDatasource || !selectedChartType) {
       console.error('Please select datasource, values, and chart type');
       return;
     }
@@ -225,51 +229,65 @@ const Dashboard: React.FC = () => {
 
     const chartDataa = {
       dashboard_id: dashboardConfig.id,
-      chart_name: 'anything',
+      chart_name: uniqueChartName,
       datasource_id: selectedSource.id,
-      chart_type: 'Bar',
+      chart_type:
+        selectedChartType.charAt(0).toUpperCase() + selectedChartType.slice(1),
       column_span: 2,
       row_span: 1,
       position: 1,
-      chart_details: {
-        x_axis: 'id',
-        y_axis: 'title',
-        x_axis_label: 'Id',
-        y_axis_label: 'Title',
-      },
+      chart_details:
+        selectedChartType === 'map'
+          ? {
+              latitude: selectedLatitudeField,
+              longitude: selectedLongitudeField,
+              metadata: selectedMetadata,
+            }
+          : {
+              x_axis: selectedValues[0],
+              y_axis: selectedValues[1],
+              x_axis_label: axisLabel.x,
+              y_axis_label: axisLabel.y,
+            },
     };
-
-    const response = await axios.post(
-      'https://aibi-backend-1060627628276.us-central1.run.app/charts/',
-      {
-        ...chartDataa,
-      },
-      {
-        headers: {
-          accept: 'application/json',
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
+    try {
+      const response = await axios.post(
+        'https://aibi-backend-1060627628276.us-central1.run.app/charts/',
+        {
+          ...chartDataa,
         },
-      }
-    );
+        {
+          headers: {
+            accept: 'application/json',
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
 
-    const data = response.data;
+      const data = response.data;
 
-    console.log('Bot response data:', data);
+      console.log('Bot response data:', data);
 
-    dispatch(
-      updateDashboard({
-        ...dashboardConfig,
-        dynamicComponents: [...dashboardConfig.dynamicComponents, newComponent],
-        layouts: {
-          ...dashboardConfig.layouts,
-          lg: [...(dashboardConfig.layouts.lg || []), newLayout],
-        },
-      })
-    );
+      dispatch(
+        updateDashboard({
+          ...dashboardConfig,
+          dynamicComponents: [
+            ...dashboardConfig.dynamicComponents,
+            newComponent,
+          ],
+          layouts: {
+            ...dashboardConfig.layouts,
+            lg: [...(dashboardConfig.layouts.lg || []), newLayout],
+          },
+        })
+      );
 
-    setIsAddModuleModalOpen(false);
-    resetModalState();
+      setIsAddModuleModalOpen(false);
+      resetModalState();
+    } catch (error: any) {
+      toast.error(error?.response?.data?.detail);
+    }
   };
 
   const resetModalState = () => {
@@ -456,6 +474,27 @@ const Dashboard: React.FC = () => {
     setIsAssignAgentModalOpen(false);
   };
 
+  const handleUniqueChartName = (name: string) => {
+    setUniqueChartName(name);
+  };
+
+  const hanldeAddLineOrBarChartLabel = (label: {
+    axis: string;
+    label: string;
+  }) => {
+    if (label.axis === 'x') {
+      setAxisLabel({
+        ...axisLabel,
+        x: label.label,
+      });
+    } else {
+      setAxisLabel({
+        ...axisLabel,
+        y: label.label,
+      });
+    }
+  };
+
   return (
     <div className='flex-grow h-screen p-4 overflow-x-hidden bg-gray-900'>
       <ResponsiveGridLayout
@@ -530,30 +569,7 @@ const Dashboard: React.FC = () => {
                 ))}
               </select>
             </div>
-            <div>
-              <label className='block text-sm font-medium text-gray-300'>
-                Select Values
-              </label>
-              <select
-                multiple
-                value={selectedValues}
-                onChange={(e) =>
-                  setSelectedValues(
-                    Array.from(
-                      e.target.selectedOptions,
-                      (option) => option.value
-                    )
-                  )
-                }
-                className='mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-600 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-md bg-gray-700 text-white'
-              >
-                {availableValues.map((value) => (
-                  <option key={value} value={value}>
-                    {value}
-                  </option>
-                ))}
-              </select>
-            </div>
+
             <div>
               <label className='block text-sm font-medium text-gray-300'>
                 Select Chart Type
@@ -566,12 +582,108 @@ const Dashboard: React.FC = () => {
                 <option value=''>Select a chart type</option>
                 <option value='line'>Line Chart</option>
                 <option value='bar'>Bar Chart</option>
-                <option value='heatmap'>Heatmap</option>
-                <option value='radar'>Radar Chart</option>
+                {/* <option value='heatmap'>Heatmap</option> */}
+                {/* <option value='radar'>Radar Chart</option> */}
                 <option value='map'>Map</option>
-                <option value='pie'>Pie Chart</option>
+                {/* <option value='pie'>Pie Chart</option> */}
               </select>
             </div>
+
+            <div>
+              <label className='block text-sm font-medium text-gray-300'>
+                Unique chart name
+              </label>
+              <input
+                placeholder='Enter a unique name for the chart'
+                onChange={(e) => handleUniqueChartName(e.target.value)}
+                value={uniqueChartName}
+                className='mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-600 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-md bg-gray-700 text-white'
+              />
+            </div>
+
+            {(selectedChartType === 'bar' || selectedChartType === 'line') && (
+              <>
+                <div>
+                  <label className='block text-sm font-medium text-gray-300'>
+                    Select X Axis Field
+                  </label>
+                  <select
+                    value={selectedValues[0]}
+                    onChange={(e) =>
+                      setSelectedValues([
+                        e.target.value,
+                        ...selectedValues.slice(1),
+                      ])
+                    }
+                    className='mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-600 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-md bg-gray-700 text-white'
+                  >
+                    <option value=''>Select field for X axis</option>
+                    {availableValues.map((key) => (
+                      <option key={key} value={key}>
+                        {key}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div>
+                  <label className='block text-sm font-medium text-gray-300'>
+                    Enter X Axis Label
+                  </label>
+                  <input
+                    placeholder='Enter X axis label'
+                    onChange={(e) =>
+                      hanldeAddLineOrBarChartLabel({
+                        axis: 'x',
+                        label: e.target.value,
+                      })
+                    }
+                    value={axisLabel.x}
+                    className='mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-600 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-md bg-gray-700 text-white'
+                  />
+                </div>
+
+                <div>
+                  <label className='block text-sm font-medium text-gray-300'>
+                    Select Y Axis Field
+                  </label>
+                  <select
+                    value={selectedValues[1]}
+                    onChange={(e) =>
+                      setSelectedValues([
+                        ...selectedValues.slice(0, 1),
+                        e.target.value,
+                      ])
+                    }
+                    className='mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-600 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-md bg-gray-700 text-white'
+                  >
+                    <option value=''>Select field for Y axis</option>
+                    {availableValues.map((key) => (
+                      <option key={key} value={key}>
+                        {key}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className='block text-sm font-medium text-gray-300'>
+                    Enter Y Axis Label
+                  </label>
+                  <input
+                    placeholder='Enter Y axis label'
+                    onChange={(e) =>
+                      hanldeAddLineOrBarChartLabel({
+                        axis: 'y',
+                        label: e.target.value,
+                      })
+                    }
+                    value={axisLabel.y}
+                    className='mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-600 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-md bg-gray-700 text-white'
+                  />
+                </div>
+              </>
+            )}
+
             {selectedChartType === 'map' && (
               <>
                 <div>
@@ -608,8 +720,35 @@ const Dashboard: React.FC = () => {
                     ))}
                   </select>
                 </div>
+
+                <div>
+                  <label className='block text-sm font-medium text-gray-300'>
+                    Metadata
+                  </label>
+
+                  <select
+                    multiple
+                    value={selectedMetadata}
+                    onChange={(e) =>
+                      setSelectedMetadata(
+                        Array.from(
+                          e.target.selectedOptions,
+                          (option) => option.value
+                        )
+                      )
+                    }
+                    className='mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-600 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-md bg-gray-700 text-white'
+                  >
+                    {availableValues.map((value) => (
+                      <option key={value} value={value}>
+                        {value}
+                      </option>
+                    ))}
+                  </select>
+                </div>
               </>
             )}
+
             <div className='flex justify-end'>
               <button
                 onClick={handleAddModuleConfirm}

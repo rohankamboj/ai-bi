@@ -13,18 +13,18 @@ interface DatabaseConnectorProps {
 
 const DatabaseConnector: React.FC<DatabaseConnectorProps> = ({ onSuccess }) => {
   const dispatch = useDispatch();
-  const [connectionDetails, setConnectionDetails] = useState({
-    host: '',
-    port: '',
-    database: '',
-    user: '',
-    password: '',
-  });
+
   const [error, setError] = useState<string>('');
 
   const [datasets, setDatasets] = useState<string[]>([]);
   const [selectedDataset, setSelectedDataset] = useState<string>('');
-  const [selectedDataTable, setSelectedDataTable] = useState<string>('');
+  const [selectedDataTable, setSelectedDataTable] = useState<{
+    id: string;
+    table_name: string;
+  }>({
+    id: '',
+    table_name: '',
+  });
 
   const [datasetTable, setDatasetTable] = useState<
     { id: string; table_name: string }[]
@@ -44,7 +44,10 @@ const DatabaseConnector: React.FC<DatabaseConnectorProps> = ({ onSuccess }) => {
   const getDatasetTables = async (dataset: string) => {
     const data = await handleGetDatasetsTables({ dataset });
 
-    setDatasetTable(data.tables);
+    setDatasetTable([
+      { id: 'select table', table_name: 'select table' },
+      ...data.tables,
+    ]);
   };
 
   useEffect(() => {
@@ -66,7 +69,10 @@ const DatabaseConnector: React.FC<DatabaseConnectorProps> = ({ onSuccess }) => {
   const handleSelectDataTableChange = (
     e: React.ChangeEvent<HTMLSelectElement>
   ) => {
-    setSelectedDataTable(e.target.value);
+    const table = datasetTable.find((table) => table.id === e.target.value);
+    if (table) {
+      setSelectedDataTable(table);
+    }
   };
 
   const connectDatabase = async () => {
@@ -80,12 +86,14 @@ const DatabaseConnector: React.FC<DatabaseConnectorProps> = ({ onSuccess }) => {
       //   // more data...
       // ];
 
-      const data = await handleConnectDatabase({ tableId: selectedDataTable });
+      const data = await handleConnectDatabase({
+        tableId: selectedDataTable.id,
+      });
 
       dispatch(
         addDatasource({
-          id: 'db_connection_id',
-          name: `Database Data - ${data.datasource._id}`,
+          id: data.db_connection_id,
+          name: `Dataset = ${selectedDataset} - Table = ${selectedDataTable.table_name}`,
           data: data.data,
         })
       );
@@ -106,34 +114,46 @@ const DatabaseConnector: React.FC<DatabaseConnectorProps> = ({ onSuccess }) => {
         Database Connection Details:
       </label>
 
-      <select onChange={handleSelectChange} className='w-full text-black'>
-        {datasets.map((dataset) => (
-          <option
-            key={dataset}
-            value={dataset}
-            defaultValue={'select dataset'}
-            className='text-black border border-gray-600 bg-gray-700  p-2 w-full rounded focus:outline-none '
-          >
-            {dataset}
-          </option>
-        ))}
-      </select>
+      <div>
+        <label className='block font-semibold mb-2 text-gray-200'>
+          Datasets:
+        </label>
 
-      {datasetTable.length > 0 && (
-        <select
-          onChange={handleSelectDataTableChange}
-          className='w-full text-black'
-        >
-          {datasetTable.map((table) => (
+        <select onChange={handleSelectChange} className='w-full text-black'>
+          {datasets.map((dataset) => (
             <option
-              key={table.id}
-              value={table.id}
+              key={dataset}
+              value={dataset}
+              defaultValue={'select dataset'}
               className='text-black border border-gray-600 bg-gray-700  p-2 w-full rounded focus:outline-none '
             >
-              {table.table_name}
+              {dataset}
             </option>
           ))}
         </select>
+      </div>
+
+      {datasetTable.length > 0 && (
+        <div>
+          <label className='block font-semibold mb-2 text-gray-200'>
+            Tables:
+          </label>
+
+          <select
+            onChange={handleSelectDataTableChange}
+            className='w-full text-black'
+          >
+            {datasetTable.map((table) => (
+              <option
+                key={table.id}
+                value={table.id}
+                className='text-black border border-gray-600 bg-gray-700  p-2 w-full rounded focus:outline-none '
+              >
+                {table.table_name}
+              </option>
+            ))}
+          </select>
+        </div>
       )}
 
       <button
