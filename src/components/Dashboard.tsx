@@ -312,6 +312,7 @@ const Dashboard: React.FC = () => {
                   data={component.data}
                   dataKeys={component.dataKeys!}
                   xAxisDataKey={component.xAxisDataKey!}
+                  yAxisDataKey={component.yAxisDataKey!}
                 />
               );
             case 'bar':
@@ -320,6 +321,7 @@ const Dashboard: React.FC = () => {
                   data={component.data}
                   dataKeys={component.dataKeys!}
                   xAxisDataKey={component.xAxisDataKey!}
+                  yAxisDataKey={component.yAxisDataKey!}
                 />
               );
             case 'heatmap':

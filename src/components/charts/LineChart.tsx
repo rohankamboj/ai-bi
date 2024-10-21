@@ -26,6 +26,7 @@ interface AdvancedLineChartProps {
   data: Array<{ [key: string]: any }>;
   dataKeys: string[];
   xAxisDataKey: string;
+  yAxisDataKey: string;
   xLabel?: string;
   yLabel?: string;
   height?: number; // Optional: default height
@@ -35,6 +36,7 @@ interface AdvancedLineChartProps {
 const CustomTooltip = ({ active, payload, label }: any) => {
   if (active && payload && payload.length) {
     const formattedLabel = (() => {
+      return label;
       const date = new Date(label);
       return isValid(date) ? format(date, 'dd MMM yyyy HH:mm') : String(label);
     })();
@@ -50,7 +52,7 @@ const CustomTooltip = ({ active, payload, label }: any) => {
           color: 'white',
         }}
       >
-        <p>{formattedLabel}</p>
+        {/* <p>{formattedLabel}</p> */}
         {payload.map((entry: any, index: number) => (
           <p
             key={index}
@@ -76,36 +78,8 @@ const AdvancedLineChart: React.FC<AdvancedLineChartProps> = ({
   xLabel = '',
   yLabel = '',
   height = 300,
+  yAxisDataKey,
 }) => {
-  // Ensure numeric values are properly formatted
-  const formattedData = data.map((item) => {
-    const newItem = { ...item };
-    dataKeys.forEach((key) => {
-      if (typeof newItem[key] === 'string') {
-        if (parseFloat(newItem[key])) {
-          newItem[key] = parseFloat(newItem[key]);
-        }
-      }
-    });
-
-    return newItem;
-  });
-
-  const formatXAxis = (tickItem: string) => {
-    const date = new Date(tickItem);
-    return isValid(date) ? format(date, 'dd MMM') : String(tickItem);
-  };
-
-  const getYDomain = () => {
-    const allValues = formattedData
-      .flatMap((item) => dataKeys.map((key) => Number(item[key])))
-      .filter((value) => !isNaN(value));
-    const minValue = Math.min(...allValues);
-    const maxValue = Math.max(...allValues);
-    const padding = (maxValue - minValue) * 0.2;
-    return [Math.max(0, minValue - padding), maxValue + padding];
-  };
-
   if (!data || data.length === 0) {
     return (
       <div
@@ -126,30 +100,30 @@ const AdvancedLineChart: React.FC<AdvancedLineChartProps> = ({
   return (
     <ResponsiveContainer width='100%' height={height}>
       <LineChart
-        data={formattedData}
+        data={data}
         margin={{ top: 20, right: 30, left: 20, bottom: 10 }}
       >
         <CartesianGrid strokeDasharray='3 3' stroke='#2A3F44' />
         <XAxis
           dataKey={xAxisDataKey}
-          tickFormatter={formatXAxis}
+          // tickFormatter={formatXAxis}
           axisLine={{ stroke: CHART_COLORS[0] }}
           tickLine={{ stroke: CHART_COLORS[0] }}
           tick={{ fill: '#8B9DA7', fontSize: 12 }}
           label={{
-            value: xLabel,
+            value: xAxisDataKey,
             position: 'insideBottomRight',
             offset: -5,
             fill: CHART_COLORS[0],
           }}
         />
         <YAxis
-          domain={getYDomain()}
+          // domain={getYDomain()}
           axisLine={{ stroke: CHART_COLORS[0] }}
           tickLine={{ stroke: CHART_COLORS[0] }}
           tick={{ fill: '#8B9DA7', fontSize: 12 }}
           label={{
-            value: yLabel,
+            value: yAxisDataKey,
             angle: -90,
             position: 'insideBottomLeft',
             offset: -5,
@@ -158,18 +132,18 @@ const AdvancedLineChart: React.FC<AdvancedLineChartProps> = ({
         />
         <Tooltip content={<CustomTooltip />} />
         <Legend wrapperStyle={{ fontSize: 12, color: '#8B9DA7' }} />
-        {dataKeys.map((key, index) => (
-          <Line
-            key={key}
-            type='monotone'
-            dataKey={key}
-            stroke={CHART_COLORS[index % CHART_COLORS.length]}
-            strokeWidth={2}
-            dot={{ fill: CHART_COLORS[index % CHART_COLORS.length], r: 4 }}
-            activeDot={{ r: 6, fill: CHART_COLORS[0] }}
-            animationDuration={1500}
-          />
-        ))}
+        {/* {dataKeys.map((key, index) => ( */}
+        <Line
+          // key={key}
+          type='monotone'
+          dataKey={yAxisDataKey}
+          // stroke={CHART_COLORS[index % CHART_COLORS.length]}
+          strokeWidth={2}
+          dot={{ fill: CHART_COLORS[CHART_COLORS.length], r: 4 }}
+          activeDot={{ r: 6, fill: CHART_COLORS[0] }}
+          animationDuration={1500}
+        />
+        {/* ))} */}
       </LineChart>
     </ResponsiveContainer>
   );
