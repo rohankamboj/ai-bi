@@ -29,6 +29,7 @@ interface DynamicComponent {
   nameKey?: string;
   latitudeField?: string;
   longitudeField?: string;
+  yAxisDataKey?: string;
 }
 
 const Dashboard: React.FC = () => {
@@ -133,6 +134,8 @@ const Dashboard: React.FC = () => {
     let chartData = flattenedData;
     let dataKeys = selectedValues;
     let xAxisDataKey = selectedValues[0];
+    let yAxisDataKey = selectedValues[1];
+
     let nameKey = selectedValues[0];
 
     // Process data based on chart type
@@ -209,6 +212,7 @@ const Dashboard: React.FC = () => {
       data: chartData,
       dataKeys,
       xAxisDataKey,
+      yAxisDataKey,
       nameKey,
       latitudeField: selectedLatitudeField,
       longitudeField: selectedLongitudeField,
@@ -297,6 +301,7 @@ const Dashboard: React.FC = () => {
   };
 
   const renderChart = (component: DynamicComponent) => {
+    console.log({ component });
     return (
       <div className='h-full'>
         {(() => {

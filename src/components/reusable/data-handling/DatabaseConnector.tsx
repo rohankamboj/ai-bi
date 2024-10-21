@@ -93,7 +93,7 @@ const DatabaseConnector: React.FC<DatabaseConnectorProps> = ({ onSuccess }) => {
       dispatch(
         addDatasource({
           id: data.db_connection_id,
-          name: `Dataset = ${selectedDataset} - Table = ${selectedDataTable.table_name}`,
+          name: `Dataset- ${selectedDataset} & Table- ${selectedDataTable.table_name}`,
           data: data.data,
         })
       );
